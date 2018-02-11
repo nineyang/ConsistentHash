@@ -5,12 +5,11 @@ import itertools
 
 
 class ConsistentHash:
-    """
-    :nodes 节点
-    :virtual 虚拟节点，为了保持整个环的平衡
-    """
-
     def __init__(self, nodes, virtual=3):
+        """
+        :param nodes: 节点
+        :param virtual: 虚拟节点，为了保持整个环的平衡
+        """
         self.base_nodes = nodes[:]
         self.actual_nodes = {}
         self.virtual = virtual
@@ -22,11 +21,13 @@ class ConsistentHash:
         self.actual_nodes = OrderedDict(sorted(self.actual_nodes.items(), key=lambda t: t[0]))
         print(self.__getNextNode(3272578760))
 
-    '''
-    添加节点
-    '''
-
     def addNode(self, node, use_virtual=True):
+        """
+        添加节点
+        :param node:
+        :param use_virtual:
+        :return:
+        """
         # 找到后面的Node
         right_node = self.__findKeyWhereIn(node)
         hash = self.hash(node)
@@ -41,11 +42,12 @@ class ConsistentHash:
                 tmp = node + '#' + str(item)
                 self.actual_nodes[self.hash(tmp)] = tmp
 
-    '''
-    删除节点
-    '''
-
     def removeNode(self, node):
+        """
+        删除节点
+        :param node:
+        :return:
+        """
         # 找到当前节点的下一个节点
         right_node = self.__getNextNode(node)
         hash = self.hash(node)
@@ -56,55 +58,62 @@ class ConsistentHash:
                 pass
         self.actual_nodes.pop(node)
 
-    '''
-    计算哈希
-    '''
-
     def hash(self, value):
+        """
+        计算哈希
+        :param value:
+        :return:
+        """
         return unpack_from(">I", md5(str(value).encode('utf-8')).digest())[0]
 
-    '''
-    删除key
-    '''
-
     def addKey(self, key, value):
+        """
+        删除key
+        :param key:
+        :param value:
+        :return:
+        """
         node = self.__findKeyWhereIn(key)
         # 需要处理的添加业务逻辑(为方便处理和演示，我这里先用一个全局的ring代替，线上环境应该真实的存放于对应的节点中)
         self.rings[key] = value
         return node
 
-    '''
-    添加key
-    '''
-
     def removeKey(self, key):
+        """
+        添加key
+        :param key:
+        :return:
+        """
         node = self.__findKeyWhereIn(key)
         # 需要处理的删除业务逻辑(为方便处理和演示，我这里先用一个全局的ring代替，线上环境应该删除真实节点存放的数据)
         self.rings.pop(key)
 
-    '''
-    获取数据
-    '''
-
     def getKey(self, key):
+        """
+        获取数据
+        :param key:
+        :return:
+        """
         node = self.__findKeyWhereIn(key)
         return self.rings[key]
 
-    '''
-    查找key应该存放在哪个节点
-    '''
-
     def __findKeyWhereIn(self, key):
+        """
+        查找key应该存放在哪个节点
+        :param key:
+        :return:
+        """
         hash = self.hash(key)
         for item in self.actual_nodes.keys():
             if hash < item:
                 return self.actual_nodes[item]
 
-    '''
-    获取当前节点的下一个节点
-    '''
-
     def __getNextNode(self, node):
+        """
+        获取当前节点的下一个节点
+        :param node:
+        :return:
+        """
         for index, value in enumerate(self.actual_nodes):
             if node == value:
                 actual_nodes = list(self.actual_nodes)
